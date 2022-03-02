@@ -64,10 +64,11 @@ def sgd_momentum(w, dw, config=None):
     #############################################################################
     # TODO: Implement the momentum update formula as given in lecture. Store    #
     # the updated value in the next_w variable. You should also use and update  #
-    # the velocity v.                                                           #
+    # the velocity v.                                                           # 
     #############################################################################
-    v = config['momentum'] * v + dw
-    next_w = w - config['learning_rate'] * v
+    m = config.get('momentum') 
+    v = m * v + dw
+    next_w = w - config['learning_rate'] * v 
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -100,8 +101,9 @@ def rmsprop(x, dx, config=None):
     # in the next_x variable. Don't forget to update cache value stored in      #
     # config['cache'] and to use the epsilon scalar to avoid dividing by zero.  #
     #############################################################################
-    config['cache'] = config['decay_rate'] * config['cache'] + (1-config['decay_rate']) * np.power(dx, 2)
-    next_x = x - config['learning_rate'] * dx / np.sqrt(config['cache'] + config['epsilon'])
+    cache_value = config['decay_rate'] * config['cache'] + (1-config['decay_rate']) * (dx ** 2)
+    next_x = x - config['learning_rate'] / (np.sqrt(cache_value) + config['epsilon']) * dx 
+    config['cache'] = cache_value    
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -138,13 +140,14 @@ def adam(x, dx, config=None):
     # the next_x variable. Don't forget to update the m, v, and t variables     #
     # stored in config and to use the epsilon scalar to avoid dividing by zero. #
     #############################################################################
-    config['m'] = config['beta1'] * config['m'] + (1-config['beta1']) * dx
-    config['v'] = config['beta2'] * config['v'] + (1-config['beta2']) * np.power(dx, 2)
-    config['t']+=1
-    m_hat = config['m'] / (1-np.power(config['beta1'], config['t']))
-    v_hat = config['v'] / (1-np.power(config['beta2'], config['t']))
-    g =  m_hat / np.sqrt(v_hat + config['epsilon'])
-    next_x = x - config['learning_rate'] * g
+    m = config['beta1'] * config['m'] + (1-config['beta1']) * dx
+    v = config['beta2'] * config['v'] + (1-config['beta2']) * (dx ** 2)
+    m_hat = m / (1- config['beta1']**(config['t']+1) + config['epsilon'])
+    v_hat = v / (1- config['beta2']**(config['t']+1) + config['epsilon']) 
+    next_x = x - config['learning_rate'] / (np.sqrt(v_hat) + config['epsilon']) * m_hat 
+    config['v'] = v 
+    config['m'] = m 
+    config['t'] = config['t'] + 1    
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
