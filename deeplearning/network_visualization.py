@@ -31,6 +31,14 @@ def compute_saliency_maps(X, y, model):
     # to each input image. You first want to compute the loss over the correct   #
     # scores, and then compute the gradients with torch.autograd.gard.           #
     ##############################################################################
+    # print(f"shape of X: {X.shape}")
+    scores = model(X).gather(1, y.view(-1,1)).squeeze()
+    # print(f"shape of scores: {scores.shape}, of y: {y.shape}")
+    grad = torch.autograd.grad(scores, X, grad_outputs = torch.ones_like(scores))[0]
+    # print(grad)
+    # print(f"shape of grad: {np.shape(grad)};")
+    grad = torch.abs(grad)
+    saliency, _ = torch.max(grad, axis=1)
     pass
     ##############################################################################
     #                             END OF YOUR CODE                               #
@@ -69,6 +77,22 @@ def make_fooling_image(X, target_y, model):
     # in fewer than 100 iterations of gradient ascent.                           #
     # You can print your progress over iterations to check your algorithm.       #
     ##############################################################################
+    counter = 0
+    dX = torch.zeros_like(X_fooling)
+    scores = -1
+    scores = model(X_fooling)
+    print(f"shape of scores: {scores.shape}, shape of X: {X_fooling.shape}")
+    idx = scores.argmax(dim=1)[0]
+    print(f"score: {idx}; target_y = {target_y}")
+
+    while(idx != target_y):
+        counter+=1
+        grad = torch.autograd.grad(scores[0, target_y], X_fooling)[0]
+        dX = learning_rate * (grad / grad.norm())
+        X_fooling = X_fooling + dX
+        scores = model(X_fooling)
+        idx = scores.argmax(dim=1)[0]
+        print(f"iteration: {counter}, scores: {idx}, score-y: {idx-target_y}")
     pass
     ##############################################################################
     #                             END OF YOUR CODE                               #
