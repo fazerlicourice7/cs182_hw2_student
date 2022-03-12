@@ -114,7 +114,7 @@ def update_class_visulization(model, target_y, l2_reg, learning_rate, img):
     """
 
     # Create a copy of image tensor with gradient support
-    img = img.clone().detach().requires_grad_(True)
+    img_clone = img.clone().detach().requires_grad_(True)
     ########################################################################
     # TODO: Use the model to compute the gradient of the score for the     #
     # class target_y with respect to the pixels of the image, and make a   #
@@ -122,8 +122,13 @@ def update_class_visulization(model, target_y, l2_reg, learning_rate, img):
     # L2 regularization term!                                              #
     # Be very careful about the signs of elements in your code.            #
     ########################################################################
+    scores = model(img_clone)
+    grad = torch.autograd.grad(scores[0, target_y] - l2_reg * img_clone.norm()**2, img_clone)[0]
+    # grad = grad - 2 * l2_reg * img_clone
+    img_clone.data += learning_rate * grad
+
     pass
     ########################################################################
     #                             END OF YOUR CODE                         #
     ########################################################################
-    return img.detach()
+    return img_clone.detach()
